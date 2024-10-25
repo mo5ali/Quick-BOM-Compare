@@ -79,7 +79,7 @@ namespace Quick_BOM_Compare
 
                             if (!string.IsNullOrEmpty(colM))
                             {
-                                return $"{colM}-{colN}"; // Return M-N if M is filled
+                                return $"Linked to {colM}-{colN} in ZeichnungVerknupfung"; // Return M-N if M is filled
                             }
 
                             // Step 7: If M is empty, check if column J is filled
@@ -88,7 +88,7 @@ namespace Quick_BOM_Compare
 
                             if (!string.IsNullOrEmpty(colJ))
                             {
-                                return $"{colJ}-{colK}"; // Return J-K if J is filled
+                                return $"Linked to {colJ}-{colK} in ZeichnungVerknupfung"; // Return J-K if J is filled
                             }
 
                             // Step 8: If J is empty, return the content of D and E columns
@@ -97,11 +97,11 @@ namespace Quick_BOM_Compare
 
                             if (!string.IsNullOrEmpty(colD) && !string.IsNullOrEmpty(colE))
                             {
-                                return $"{colD}-{colE}"; // Return D-E if D and E are filled
+                                return $"Linked to {colD}-{colE} in ZeichnungVerknupfung"; // Return D-E if D and E are filled
                             }
 
                             // Step 9: If J and M are empty, return this message
-                            return $"No DFT linked to {fileNameWithoutExtension} in ZeichnungVerknupfung";
+                            return $"No DFT linked to {fileNameWithoutExtension} in ZeichnungVerknupfung\nUsing Parts list from 3D in the BOM";
                         }
                     }
                 }
