@@ -359,23 +359,28 @@ namespace Quick_BOM_Compare
 
             string ZeichnungVerknupfungResult = searchZeichnungVerknupfung(InputAsmName); // Call the Excel search function
             label4.Text = ZeichnungVerknupfungResult; // Update label4 with the result from Excel search
-            
+
+            // Initial path setup
             Linked_DFT_Path = $"Z:\\Zeichnungen\\DFT\\{Linked_DFT}.dft";
+
             if (System.IO.File.Exists(Linked_DFT_Path))
             {
                 label4.Text += System.Environment.NewLine + "Draft found in DFT :)";
             }
             else
             {
+                // Change the path to the alternate location
                 Linked_DFT_Path = $"Z:\\Zeichnungen\\alte DFT\\{Linked_DFT}.dft";
-            }
-            if (System.IO.File.Exists(Linked_DFT_Path))
-            {
-                label4.Text += System.Environment.NewLine + "Draft found in alte DFT :)";
-            }
-            else
-            {
-                label4.Text += System.Environment.NewLine + "Cannot find DFT file";
+
+                // Check for existence in the alternate location
+                if (System.IO.File.Exists(Linked_DFT_Path))
+                {
+                    label4.Text += System.Environment.NewLine + "Draft found in alte DFT :)";
+                }
+                else
+                {
+                    label4.Text += System.Environment.NewLine + "Cannot find DFT file";
+                }
             }
 
         }
@@ -431,7 +436,7 @@ namespace Quick_BOM_Compare
         {
             Dictionary<string, double> Dict_SAP_BOM = new Dictionary<string, double>(); // Dict of part name and quantity
 
-            string SAP_BOM_path = "C:\\Users\\MA\\Desktop\\BOM.txt"; // Path to the BOM file
+            string SAP_BOM_path = "Z:\\Allgemein\\Temp\\MA\\COMPARISON\\BOM.txt"; // Path to the BOM file
 
             try
             {
@@ -441,7 +446,7 @@ namespace Quick_BOM_Compare
                 {
                     // Only process lines that start with the assembly name
                     if (line.StartsWith(InputAsmName, StringComparison.OrdinalIgnoreCase) &&
-                    (line.Length == InputAsmName.Length || line[InputAsmName.Length] == '\t' || line[InputAsmName.Length] == ' '))
+                        (line.Length == InputAsmName.Length || line[InputAsmName.Length] == '\t' || line[InputAsmName.Length] == ' '))
                     {
                         // Use regex to split the line by whitespace and capture relevant groups
                         var matches = Regex.Matches(line, @"\S+");
@@ -450,6 +455,14 @@ namespace Quick_BOM_Compare
                         // Check if the line has enough columns (we need at least 6)
                         if (columns.Length >= 6)
                         {
+                            // Check if the third column contains 'T'
+                            if (columns[2].Equals("T", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Skip the line if the third column contains 'T'
+                                Console.WriteLine($"Info: Ignoring line with 'T' in the third column: {line}");
+                                continue;
+                            }
+
                             // Extract part name (column 4) and quantity (column 5)
                             string partName = columns[3];   // Column 4 (part name)
                             string quantity = columns[4];    // Column 5 (quantity)
@@ -472,7 +485,6 @@ namespace Quick_BOM_Compare
                         {
                             Console.WriteLine($"Warning: Skipped line with insufficient columns: {line}");
                         }
-                        Extracted_From_SAP = true;
                     }
                 }
 
@@ -485,6 +497,7 @@ namespace Quick_BOM_Compare
             {
              
             }
+            Extracted_From_SAP = true;
             return Dict_SAP_BOM;
         }
 
