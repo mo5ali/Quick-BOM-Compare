@@ -50,7 +50,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(201, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Enter Assembly name including extension";
+            this.label1.Text = "Enter Assembly name without the extension";
             // 
             // label2
             // 

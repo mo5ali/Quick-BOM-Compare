@@ -396,7 +396,7 @@ namespace Quick_BOM_Compare
             {
                 Labelsapstatus.Text = $"Error: There was an issue fetching SAP BOM";
             }
-            Label3dstatus.Text = $"opening Solidedge to get 3D model data. please wait..";
+            Label3dstatus.Text = $"Opening Solidedge to get 3D model data. please wait..";
             SolidEdgeFramework.SolidEdgeDocument document = null;
             var application = InitializeSolidEdge();
             int retryCount = 5; // Define retryCount here
@@ -473,8 +473,8 @@ namespace Quick_BOM_Compare
                             {
                                 // Remove any potential decimal commas and trim the quantity
                                 quantity = quantity.Replace(',', '.').Trim();
-                                double quantity_d = Convert.ToDouble(quantity);
-                                quantity_d = quantity_d / 100;
+                                double quantity_d = Convert.ToDouble(quantity, System.Globalization.CultureInfo.InvariantCulture);
+                                //quantity_d = quantity_d / 100;
                                 Dict_SAP_BOM[partName] = quantity_d; // Add or update the dictionary
                             }
                             else
@@ -555,12 +555,45 @@ namespace Quick_BOM_Compare
                 }
             }
         }
+        private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            // Check if the current column is the fourth column (index 3)
+            if (e.ColumnIndex == 3 && e.Value != null)
+            {
+                // Apply colors based on the cell's content
+                string cellValue = e.Value.ToString();
+
+                if (cellValue == "IO")
+                {
+                    e.CellStyle.BackColor = Color.Green;
+                    e.CellStyle.ForeColor = Color.White;
+                }
+                else if (cellValue == "Not in SAP" || cellValue == "Not in 3D")
+                {
+                    e.CellStyle.BackColor = Color.Red;
+                    e.CellStyle.ForeColor = Color.White;
+                }
+                else if (cellValue == "Diff Qu")
+                {
+                    e.CellStyle.BackColor = Color.Yellow;
+                    e.CellStyle.ForeColor = Color.Black;
+                }
+                else
+                {
+                    // Set default color for cells that don't match the above criteria
+                    e.CellStyle.BackColor = Color.White;
+                    e.CellStyle.ForeColor = Color.Black;
+                }
+            }
+        }
         private void button4_Click(object sender, EventArgs e)
         {
             Translate3DList(Extracted_3D_List, out Translated_3D_List);
             var singleBOM = new Dictionary<string, (double, double, string)>();
             singleBOM = Create_Single_BOM(Translated_3D_List, Extracted_SAP_List);
             DisplaySingleBOM(singleBOM);
+            dataGridView1.CellFormatting += DataGridView1_CellFormatting;
+
         }
         static Dictionary<string, (double, double, string)> Create_Single_BOM(Dictionary<string, double> basePartCounts, Dictionary<string, double> DictSAPBOM)
         {
