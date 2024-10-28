@@ -396,6 +396,7 @@ namespace Quick_BOM_Compare
             {
                 Labelsapstatus.Text = $"Error: There was an issue fetching SAP BOM";
             }
+            Label3dstatus.Text = $"opening Solidedge to get 3D model data. please wait..";
             SolidEdgeFramework.SolidEdgeDocument document = null;
             var application = InitializeSolidEdge();
             int retryCount = 5; // Define retryCount here

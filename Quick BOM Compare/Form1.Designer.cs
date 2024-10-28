@@ -54,12 +54,13 @@
             // 
             // label2
             // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(964, 590);
+            this.label2.Location = new System.Drawing.Point(827, 590);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(78, 13);
+            this.label2.Size = new System.Drawing.Size(190, 13);
             this.label2.TabIndex = 1;
-            this.label2.Text = "Mohamed K Ali";
+            this.label2.Text = "Made by Mohamed K Ali and ChatGPT";
             // 
             // TxtAsmName
             // 
@@ -73,18 +74,18 @@
             this.LblPathStatus.AutoSize = true;
             this.LblPathStatus.Location = new System.Drawing.Point(35, 168);
             this.LblPathStatus.Name = "LblPathStatus";
-            this.LblPathStatus.Size = new System.Drawing.Size(35, 13);
+            this.LblPathStatus.Size = new System.Drawing.Size(10, 13);
             this.LblPathStatus.TabIndex = 3;
-            this.LblPathStatus.Text = "label3";
+            this.LblPathStatus.Text = " ";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(35, 238);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(35, 13);
+            this.label4.Size = new System.Drawing.Size(10, 13);
             this.label4.TabIndex = 4;
-            this.label4.Text = "label4";
+            this.label4.Text = " ";
             // 
             // button1
             // 
@@ -118,20 +119,20 @@
             // Labelsapstatus
             // 
             this.Labelsapstatus.AutoSize = true;
-            this.Labelsapstatus.Location = new System.Drawing.Point(286, 475);
+            this.Labelsapstatus.Location = new System.Drawing.Point(35, 470);
             this.Labelsapstatus.Name = "Labelsapstatus";
-            this.Labelsapstatus.Size = new System.Drawing.Size(35, 13);
+            this.Labelsapstatus.Size = new System.Drawing.Size(10, 13);
             this.Labelsapstatus.TabIndex = 8;
-            this.Labelsapstatus.Text = "label3";
+            this.Labelsapstatus.Text = " ";
             // 
             // Label3dstatus
             // 
             this.Label3dstatus.AutoSize = true;
-            this.Label3dstatus.Location = new System.Drawing.Point(286, 502);
+            this.Label3dstatus.Location = new System.Drawing.Point(35, 508);
             this.Label3dstatus.Name = "Label3dstatus";
-            this.Label3dstatus.Size = new System.Drawing.Size(35, 13);
+            this.Label3dstatus.Size = new System.Drawing.Size(10, 13);
             this.Label3dstatus.TabIndex = 9;
-            this.Label3dstatus.Text = "label3";
+            this.Label3dstatus.Text = " ";
             // 
             // button4
             // 
@@ -139,14 +140,17 @@
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
             this.button4.TabIndex = 10;
-            this.button4.Text = "button4";
+            this.button4.Text = "View";
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // dataGridView1
             // 
+            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(480, 22);
+            this.dataGridView1.Location = new System.Drawing.Point(453, 22);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(539, 556);
             this.dataGridView1.TabIndex = 11;
@@ -155,7 +159,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1044, 601);
+            this.ClientSize = new System.Drawing.Size(1017, 601);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.Label3dstatus);
