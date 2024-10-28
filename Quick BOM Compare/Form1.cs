@@ -14,6 +14,7 @@ using SolidEdgeFramework;  // Ensure SolidEdgeFramework is included
 using SolidEdgeAssembly;   // Ensure SolidEdgeAssembly is included
 using SolidEdgeDraft;      // Ensure SolidEdgeDraft is included
 using SolidEdgePart;       // Ensure SolidEdgePart is included
+using System.Text.RegularExpressions;
 
 namespace Quick_BOM_Compare
 {
@@ -24,7 +25,15 @@ namespace Quick_BOM_Compare
             InitializeComponent();
         }
         bool IsThereALinkedDFT = false;
+        public static bool Extracted_From_SAP = false;
+        string Linked_DFT = string.Empty;
         string Linked_DFT_Path = string.Empty;
+        string Linked_DFT_Path_alte = string.Empty;
+        public static string model_used_in_DFT = string.Empty;
+        public static Dictionary<string, double> Extracted_3D_List = new Dictionary<string, double>();
+        public static Dictionary<string, double> Translated_3D_List = new Dictionary<string, double>();
+        public static Dictionary<string, double> Extracted_SAP_List = new Dictionary<string, double>();
+        public static string InputAsmName = string.Empty;
 
         public static SolidEdgeFramework.Application InitializeSolidEdge()
         {
@@ -95,15 +104,15 @@ namespace Quick_BOM_Compare
                     {
                         
                         string originalName = occurrence.Name; // Extract occurrence name (with suffix)
-                        string baseName = originalName.Split('.')[0]; // remove extnsion by removing everything after the dot
+                        //string baseName = originalName.Split('.')[0]; // remove extnsion by removing everything after the dot
                         
-                        if (basePartCounts.ContainsKey(baseName)) //if the base part name is already in the dictionary
+                        if (basePartCounts.ContainsKey(originalName)) //if the base part name is already in the dictionary
                         {
-                            basePartCounts[baseName]++; // If yes, increase the count and skip
+                            basePartCounts[originalName]++; // If yes, increase the count and skip
                         }
                         else
                         {
-                            basePartCounts[baseName] = 1; // If no, add the base name to the dictionary with a count of 1
+                            basePartCounts[originalName] = 1; // If no, add the base name to the dictionary with a count of 1
                         }
                     }
                     return basePartCounts;
@@ -195,6 +204,7 @@ namespace Quick_BOM_Compare
                             // Check if it's a part or assembly and extract properties accordingly
                             if (referencedDoc.Type == SolidEdgeFramework.DocumentTypeConstants.igAssemblyDocument)
                             {
+                                model_used_in_DFT = modelFileName;
                                 PartList_DFT = ExtractAssemblyProperties(referencedDoc);
                             }
                         }
@@ -258,7 +268,7 @@ namespace Quick_BOM_Compare
         {
             string ZeichnungVerknupfungPath = @"Z:\Allgemein\Hilfsmittel\ExcelMakros_NM\ZeichnungenZuKuehler_000.2.xlsm";
             OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial; //license context for EPPlus 
-            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(asmName); //Remove the extension from the asmName
+            string fileNameWithoutExtension = System.IO.Path.GetFileNameWithoutExtension(asmName); //Remove the extension from the asmName
 
             // Step 4: Open the Excel file and search for the name in column A
             try
@@ -286,7 +296,7 @@ namespace Quick_BOM_Compare
                             if (!string.IsNullOrEmpty(colM))
                             {
                                 IsThereALinkedDFT = true;
-                                Linked_DFT_Path = $"Z:\\Zeichnungen\\DFT\\{colM}-{colN}.dft";
+                                Linked_DFT = $"{colM}-{colN}";
                                 return $"Linked to {colM}-{colN} in ZeichnungVerknupfung"; // Return M-N if M is filled
                             }
 
@@ -297,7 +307,7 @@ namespace Quick_BOM_Compare
                             if (!string.IsNullOrEmpty(colJ))
                             {
                                 IsThereALinkedDFT = true; 
-                                Linked_DFT_Path = $"Z:\\Zeichnungen\\DFT\\{colJ}-{colK}.dft";
+                                Linked_DFT = $"{colJ}-{colK}";
                                 return $"Linked to {colJ}-{colK} in ZeichnungVerknupfung"; // Return J-K if J is filled
                             }
 
@@ -309,7 +319,7 @@ namespace Quick_BOM_Compare
                             {
                                 IsThereALinkedDFT = true;
                                 Linked_DFT_Path = $"Z:\\Zeichnungen\\DFT\\{colD}-{colE}.dft";
-                                return $"Linked to {colD}-{colE} in ZeichnungVerknupfung"; // Return D-E if D and E are filled
+                                return $"No F-drawing linked just {colD}-{colE} in ZeichnungVerknupfung"; // Return D-E if D and E are filled
                             }
 
                             // Step 9: If J and M are empty, return this message
@@ -333,8 +343,9 @@ namespace Quick_BOM_Compare
             IsThereALinkedDFT = false;
             Linked_DFT_Path = string.Empty;
 
-            string InputAsmName = TxtAsmName.Text;  // Get the Assembly name
-            string AsmFilePath = GenerateFilePath(InputAsmName); //Generate file path
+            InputAsmName = TxtAsmName.Text;  // Get the Assembly name
+            string InputAsmName_ext = $"{InputAsmName}.asm";
+            string AsmFilePath = GenerateFilePath(InputAsmName_ext); //Generate file path
             bool pathExists = CheckIfPathExists(AsmFilePath);
             if (pathExists == true)
             {
@@ -344,54 +355,284 @@ namespace Quick_BOM_Compare
             {
                 LblPathStatus.Text = $"{AsmFilePath} ---> Does not exist :(";
             }
-            else
+
+
+            string ZeichnungVerknupfungResult = searchZeichnungVerknupfung(InputAsmName); // Call the Excel search function
+            label4.Text = ZeichnungVerknupfungResult; // Update label4 with the result from Excel search
+            
+            Linked_DFT_Path = $"Z:\\Zeichnungen\\DFT\\{Linked_DFT}.dft";
+            if (!System.IO.File.Exists(Linked_DFT_Path))
             {
-                LblPathStatus.Text = $"Please do not forget the extension :* ";
+                Linked_DFT_Path = $"Z:\\Zeichnungen\\alte DFT\\{Linked_DFT}.dft";
+            }
+            if (!System.IO.File.Exists(Linked_DFT_Path))
+            {
+                label4.Text += System.Environment.NewLine + "Cannot find DFT file";
+
             }
 
-            // Step 5: Call the Excel search function and display the result in label4
-            string ZeichnungVerknupfungResult = searchZeichnungVerknupfung(InputAsmName);
-            label4.Text = ZeichnungVerknupfungResult; // Update label4 with the result from Excel search
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
+            Extracted_SAP_List = GetSAP_BOM();
+            if (Extracted_From_SAP == true)
+            {
+                Labelsapstatus.Text = $"Succesfully fetched SAP BOM";
+            }
+            else
+            {
+                Labelsapstatus.Text = $"Error: There was an issue fetching SAP BOM";
+            }
             SolidEdgeFramework.SolidEdgeDocument document = null;
             var application = InitializeSolidEdge();
-            document = TryOpenDocument(application, filePath, retryCount);
-            Dictionary<string, double> Extracted_3D_List = new Dictionary<string, double>();
-        try // Open the document with retries
-        {
             int retryCount = 5; // Define retryCount here
-            if (IsThereALinkedDFT == true)
+            
+            try // Open the document with retries
             {
-                string filePath = Linked_DFT_Path;
-                document = TryOpenDocument(application, filePath, retryCount);
-                Extracted_3D_List = ExtractDraftProperties(document);
-            }
-            else if (IsThereALinkedDFT ==false) // Process inputed assembly document
-            {
-                Extracted_3D_List = ExtractAssemblyProperties(document);
+                if (IsThereALinkedDFT == true)
+                {
+                    string filePath = Linked_DFT_Path;
+              
+                    document = TryOpenDocument(application, filePath, retryCount);
+                    Extracted_3D_List = ExtractDraftProperties(document);
+                }
+                else if (IsThereALinkedDFT == false) // Process inputed assembly document
+                {
+                    Extracted_3D_List = ExtractAssemblyProperties(document);
 
                     //            SingleBOM_documentlevel = ExtractAssemblyProperties(DFT_NAME, document);
                     //            Console.WriteLine();
-             return;
-            }
-        catch (Exception ex)
-        {
-             Console.WriteLine($"Error processing document: {ex.Message}");
-        }
-        finally
-        {
-        // Properly close and release the document without quitting Solid Edge
-        if (document != null)
-        {
-         document.Close(false); // Close without saving changes
-        }
                 }
-                return SingleBOM_documentlevel;
+            }
+            catch (Exception ex)
+            {
+                Label3dstatus.Text = $"Error: There was an issue fetching 3D Partlist";
+            }
+            finally
+            {
+                // Properly close and release the document without quitting Solid Edge
+                if (document != null)
+                {
+                    document.Close(false); // Close without saving changes
+                }
+            }
+            Label3dstatus.Text = $"Succesfully fetched 3D Partlist";
+            return;
+            }
+        static Dictionary<string, double> GetSAP_BOM()
+        {
+            Dictionary<string, double> Dict_SAP_BOM = new Dictionary<string, double>(); // Dict of part name and quantity
+
+            string SAP_BOM_path = "C:\\Users\\MA\\Desktop\\BOM.txt"; // Path to the BOM file
+
+            try
+            {
+                string[] lines = File.ReadAllLines(SAP_BOM_path); // Read the file line by line
+
+                foreach (string line in lines)
+                {
+                    // Only process lines that start with the assembly name
+                    if (line.StartsWith(InputAsmName, StringComparison.OrdinalIgnoreCase) &&
+                    (line.Length == InputAsmName.Length || line[InputAsmName.Length] == '\t' || line[InputAsmName.Length] == ' '))
+                    {
+                        // Use regex to split the line by whitespace and capture relevant groups
+                        var matches = Regex.Matches(line, @"\S+");
+                        var columns = matches.Cast<Match>().Select(m => m.Value.Trim()).ToArray();
+
+                        // Check if the line has enough columns (we need at least 6)
+                        if (columns.Length >= 6)
+                        {
+                            // Extract part name (column 4) and quantity (column 5)
+                            string partName = columns[3];   // Column 4 (part name)
+                            string quantity = columns[4];    // Column 5 (quantity)
+
+                            // Check if part name and quantity are valid
+                            if (!string.IsNullOrEmpty(partName) && !string.IsNullOrEmpty(quantity))
+                            {
+                                // Remove any potential decimal commas and trim the quantity
+                                quantity = quantity.Replace(',', '.').Trim();
+                                double quantity_d = Convert.ToDouble(quantity);
+                                quantity_d = quantity_d / 100;
+                                Dict_SAP_BOM[partName] = quantity_d; // Add or update the dictionary
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Warning: Missing part name or quantity for line: {line}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Warning: Skipped line with insufficient columns: {line}");
+                        }
+                        Extracted_From_SAP = true;
+                    }
+                }
+
+            }
+            catch (FileNotFoundException ex)
+            {
+
+            }
+            catch (IOException ex)
+            {
+             
+            }
+            return Dict_SAP_BOM;
+        }
+
+        public void Translate3DList( Dictionary<string, double> Extracted_3D_List, out Dictionary<string, double> Translated_3D_List)
+        {
+            Translated_3D_List = new Dictionary<string, double>();
+            string Traslation_excel_path = $"Z:\\Entwicklung\\Intern\\Archiv\\SE und SAP Artikelnummern.xlsx";
+
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial; //license context for EPPlus
+
+            FileInfo fileInfo = new FileInfo(Traslation_excel_path); // Load the Excel file
+
+            using (ExcelPackage package = new ExcelPackage(fileInfo))
+            {
+                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the first worksheet
+
+                // Get the total number of rows in the worksheet
+                int rowCount = worksheet.Dimension.Rows;
+
+                // Loop through each entry in Extracted_3D_List
+                foreach (var entry in Extracted_3D_List)
+                {
+                    string searchString = entry.Key;  // The string to search in column B
+                    double originalValue = entry.Value;  // The double value to keep
+
+                    // Initialize a variable to track if the string was found
+                    bool found = false;
+
+                    // Search for the string in column B
+                    for (int row = 1; row <= rowCount; row++)
+                    {
+                        string columnBValue = worksheet.Cells[row, 2].Text.Trim(); // Column B (2nd column)
+
+                        if (columnBValue.Equals(searchString, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // If found, get the corresponding value from column C (3rd column)
+                            string columnCValue = worksheet.Cells[row, 3].Text; // Column C
+                            double translatedValue;
+
+                            // Try to parse the value from column C to double
+                            if (double.TryParse(columnCValue, out translatedValue))
+                            {
+                                Translated_3D_List[searchString] = translatedValue; // Add to Translated_3D_List
+                            }
+                            else
+                            {
+                                // If parsing fails, keep the original value
+                                Translated_3D_List[searchString] = originalValue;
+                            }
+
+                            found = true;
+                            break; // Exit the loop since we've found the string
+                        }
+                    }
+
+                    // If not found, add the original string and value to Translated_3D_List
+                    if (!found)
+                    {
+                        Translated_3D_List[searchString] = originalValue; // Keep the original value
+                    }
+                }
+            }
+        }
+        private void button4_Click(object sender, EventArgs e)
+        {
+            Translate3DList(Extracted_3D_List, out Translated_3D_List);
+            var singleBOM = new Dictionary<string, (double, double, string)>();
+            singleBOM = Create_Single_BOM(Translated_3D_List, Extracted_SAP_List);
+            DisplaySingleBOM(singleBOM);
+        }
+        static Dictionary<string, (double, double, string)> Create_Single_BOM(Dictionary<string, double> basePartCounts, Dictionary<string, double> DictSAPBOM)
+        {
+            // This will hold the final results
+            var singleBOM = new Dictionary<string, (double base3DQuantity, double sapQuantity, string someString)>();
+
+            // First loop: Iterate over DictSAPBOM
+            foreach (var sapEntry in DictSAPBOM)
+            {
+                string sapPartName = sapEntry.Key;
+                double sapQuantity = sapEntry.Value;
+
+                // Exact match check
+                if (basePartCounts.ContainsKey(sapPartName))
+                {
+                    double base3DQuantity = basePartCounts[sapPartName];
+                    singleBOM[sapPartName] = (base3DQuantity, sapQuantity, ""); // Indicator will be added later
+                }
+
+                // If no partial match was found, put name and quantity from SAP and 0 for 3D quantity, with indicator "Not in 3D"
+                else
+                {
+                    singleBOM[sapPartName] = (0, sapQuantity, "Not in 3D"); // 0 for 3D quantity, indicator "Not in 3D"
+                }
             }
             
+
+            // Second loop: Iterate over basePartCounts for unmatched parts in SingleBOM
+            foreach (var baseEntry in basePartCounts)
+            {
+                string basePartName = baseEntry.Key;
+                double base3DQuantity = baseEntry.Value;
+
+                // Add to SingleBOM only if basePartName is not present in singleBOM (no exact or partial match)
+                bool foundMatch = singleBOM.ContainsKey(basePartName);
+
+                if (!foundMatch)
+                {
+                    singleBOM[basePartName] = (base3DQuantity, 0, "Not in SAP"); // 0 for SAP quantity, indicator "Not in SAP"
+                }
+            }
+
+            // Third loop: Add indicators to the singleBOM if the indicator is empty
+            foreach (var bomEntry in singleBOM.ToList())
+            {
+                if (bomEntry.Key == "Assembly" || bomEntry.Key == "Part Name")
+                    continue; // Skip the headers while adding indicators
+
+                double base3DQuantity = bomEntry.Value.Item1;
+                double sapQuantity = bomEntry.Value.Item2;
+                string currentIndicator = bomEntry.Value.Item3;
+
+                // Only update the indicator if it's empty
+                if (string.IsNullOrEmpty(currentIndicator))
+                {
+                    string indicator = (base3DQuantity == sapQuantity) ? "IO" : "Diff Qu";
+                    singleBOM[bomEntry.Key] = (base3DQuantity, sapQuantity, indicator);
+                }
+            }
+
+            // Sort the Single BOM by SAP part names, excluding the header
+            var sortedSingleBOM = singleBOM
+                .OrderBy(kvp => kvp.Key == "Header" ? "0" : kvp.Key) // Keep header first
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            // Add headers at the beginning of the singleBOM
+            return sortedSingleBOM;
+        }
+        private void DisplaySingleBOM(Dictionary<string, (double base3DQuantity, double sapQuantity, string someString)> singleBOM)
+        {
+            // Clear any existing rows
+            dataGridView1.Rows.Clear();
+
+            // Add columns if not already defined in the designer
+            dataGridView1.Columns.Clear();
+            dataGridView1.Columns.Add("PartName", "Part Name");
+            dataGridView1.Columns.Add("Base3DQuantity", "Base 3D Quantity");
+            dataGridView1.Columns.Add("SAPQuantity", "SAP Quantity");
+            dataGridView1.Columns.Add("Indicator", "Indicator");
+
+            // Populate the DataGridView
+            foreach (var entry in singleBOM)
+            {
+                dataGridView1.Rows.Add(entry.Key, entry.Value.base3DQuantity, entry.Value.sapQuantity, entry.Value.someString);
+            }
         }
     }
 }
+
