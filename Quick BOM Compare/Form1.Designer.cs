@@ -40,6 +40,10 @@
             this.Label3dstatus = new System.Windows.Forms.Label();
             this.button4 = new System.Windows.Forms.Button();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.LblCnsl = new System.Windows.Forms.Label();
+            this.radioButton1000 = new System.Windows.Forms.RadioButton();
+            this.radioButton2000 = new System.Windows.Forms.RadioButton();
+            this.radioButton8000 = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -48,7 +52,7 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(32, 36);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(201, 13);
+            this.label1.Size = new System.Drawing.Size(211, 13);
             this.label1.TabIndex = 0;
             this.label1.Text = "Enter Assembly name without the extension";
             // 
@@ -56,7 +60,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(827, 590);
+            this.label2.Location = new System.Drawing.Point(827, 623);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(190, 13);
             this.label2.TabIndex = 1;
@@ -76,7 +80,7 @@
             this.LblPathStatus.Name = "LblPathStatus";
             this.LblPathStatus.Size = new System.Drawing.Size(10, 13);
             this.LblPathStatus.TabIndex = 3;
-            this.LblPathStatus.Text = " ";
+            this.LblPathStatus.Text = "__";
             // 
             // label4
             // 
@@ -85,7 +89,7 @@
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(10, 13);
             this.label4.TabIndex = 4;
-            this.label4.Text = " ";
+            this.label4.Text = "__";
             // 
             // button1
             // 
@@ -119,7 +123,7 @@
             // Labelsapstatus
             // 
             this.Labelsapstatus.AutoSize = true;
-            this.Labelsapstatus.Location = new System.Drawing.Point(35, 470);
+            this.Labelsapstatus.Location = new System.Drawing.Point(35, 449);
             this.Labelsapstatus.Name = "Labelsapstatus";
             this.Labelsapstatus.Size = new System.Drawing.Size(10, 13);
             this.Labelsapstatus.TabIndex = 8;
@@ -128,7 +132,7 @@
             // Label3dstatus
             // 
             this.Label3dstatus.AutoSize = true;
-            this.Label3dstatus.Location = new System.Drawing.Point(35, 508);
+            this.Label3dstatus.Location = new System.Drawing.Point(32, 507);
             this.Label3dstatus.Name = "Label3dstatus";
             this.Label3dstatus.Size = new System.Drawing.Size(10, 13);
             this.Label3dstatus.TabIndex = 9;
@@ -152,14 +156,60 @@
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Location = new System.Drawing.Point(453, 22);
             this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(539, 556);
+            this.dataGridView1.Size = new System.Drawing.Size(539, 589);
             this.dataGridView1.TabIndex = 11;
+            // 
+            // LblCnsl
+            // 
+            this.LblCnsl.AutoSize = true;
+            this.LblCnsl.Location = new System.Drawing.Point(12, 555);
+            this.LblCnsl.Name = "LblCnsl";
+            this.LblCnsl.Size = new System.Drawing.Size(50, 13);
+            this.LblCnsl.TabIndex = 12;
+            this.LblCnsl.Text = "console:-";
+            // 
+            // radioButton1000
+            // 
+            this.radioButton1000.AutoSize = true;
+            this.radioButton1000.Location = new System.Drawing.Point(35, 367);
+            this.radioButton1000.Name = "radioButton1000";
+            this.radioButton1000.Size = new System.Drawing.Size(49, 17);
+            this.radioButton1000.TabIndex = 13;
+            this.radioButton1000.TabStop = true;
+            this.radioButton1000.Text = "1000";
+            this.radioButton1000.UseVisualStyleBackColor = true;
+            // 
+            // radioButton2000
+            // 
+            this.radioButton2000.AutoSize = true;
+            this.radioButton2000.Location = new System.Drawing.Point(194, 367);
+            this.radioButton2000.Name = "radioButton2000";
+            this.radioButton2000.Size = new System.Drawing.Size(49, 17);
+            this.radioButton2000.TabIndex = 16;
+            this.radioButton2000.TabStop = true;
+            this.radioButton2000.Text = "2000";
+            this.radioButton2000.UseVisualStyleBackColor = true;
+            // 
+            // radioButton8000
+            // 
+            this.radioButton8000.AutoSize = true;
+            this.radioButton8000.Location = new System.Drawing.Point(374, 367);
+            this.radioButton8000.Name = "radioButton8000";
+            this.radioButton8000.Size = new System.Drawing.Size(49, 17);
+            this.radioButton8000.TabIndex = 17;
+            this.radioButton8000.TabStop = true;
+            this.radioButton8000.Text = "8000";
+            this.radioButton8000.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1017, 601);
+            this.ClientSize = new System.Drawing.Size(1017, 634);
+            this.Controls.Add(this.radioButton8000);
+            this.Controls.Add(this.radioButton2000);
+            this.Controls.Add(this.radioButton1000);
+            this.Controls.Add(this.LblCnsl);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.Label3dstatus);
@@ -194,6 +244,10 @@
         private System.Windows.Forms.Label Label3dstatus;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Label LblCnsl;
+        private System.Windows.Forms.RadioButton radioButton1000;
+        private System.Windows.Forms.RadioButton radioButton2000;
+        private System.Windows.Forms.RadioButton radioButton8000;
     }
 }
 

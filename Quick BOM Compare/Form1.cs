@@ -35,7 +35,18 @@ namespace Quick_BOM_Compare
         public static Dictionary<string, double> Extracted_SAP_List = new Dictionary<string, double>();
         public static string InputAsmName = string.Empty;
 
-        public static SolidEdgeFramework.Application InitializeSolidEdge()
+        private void LogMessage(string message)
+        {
+            if (LblCnsl.InvokeRequired)
+            {
+                LblCnsl.Invoke(new MethodInvoker(() => LogMessage(message)));
+            }
+            else
+            {
+                LblCnsl.Text += System.Environment.NewLine + message;
+            }
+        }
+        public SolidEdgeFramework.Application InitializeSolidEdge()
         {
             SolidEdgeFramework.Application application = null;
 
@@ -49,12 +60,12 @@ namespace Quick_BOM_Compare
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error initializing Solid Edge: {ex.Message}");
+                LogMessage($"Error initializing Solid Edge: {ex.Message}");
             }
 
             return application;
         }
-        static SolidEdgeFramework.SolidEdgeDocument TryOpenDocument(SolidEdgeFramework.Application application, string filePath, int retryCount = 5)
+        public SolidEdgeFramework.SolidEdgeDocument TryOpenDocument(SolidEdgeFramework.Application application, string filePath, int retryCount = 5)
         {
             SolidEdgeFramework.SolidEdgeDocument document = null;
             int attempts = 0;
@@ -70,13 +81,13 @@ namespace Quick_BOM_Compare
                 catch (System.Runtime.InteropServices.COMException comEx) when ((uint)comEx.ErrorCode == 0x8001010A)
                 {
                     // Handle the application busy error
-                    Console.WriteLine($"Solid Edge is busy. Retrying... Attempt {attempts + 1} of {retryCount}");
+                    LogMessage($"Solid Edge is busy. Retrying... Attempt {attempts + 1} of {retryCount}");
                     System.Threading.Thread.Sleep(1000); // Wait for 1 second before retrying
                     attempts++;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error opening document: {ex.Message}");
+                    LogMessage($"Error opening document: {ex.Message}");
                     break;
                 }
             }
@@ -84,7 +95,7 @@ namespace Quick_BOM_Compare
             return document; // Returns null if it failed to open after retries
         }
 
-        static Dictionary<string, double> ExtractAssemblyProperties(SolidEdgeFramework.SolidEdgeDocument document)
+        Dictionary<string, double> ExtractAssemblyProperties(SolidEdgeFramework.SolidEdgeDocument document)
         {
             int retryCount = 0;
             const int maxRetries = 5;
@@ -120,7 +131,7 @@ namespace Quick_BOM_Compare
                 catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.ErrorCode == 0x8001010A)
                 {
                     // Error: RPC_E_SERVERCALL_RETRYLATER - Application is busy, retry after a delay
-                    Console.WriteLine($"Solid Edge is busy, retrying... ({retryCount + 1}/{maxRetries})");
+                    LogMessage($"Solid Edge is busy, retrying... ({retryCount + 1}/{maxRetries})");
 
                     // Wait for a while before retrying
                     System.Threading.Thread.Sleep(retryDelay);
@@ -128,17 +139,17 @@ namespace Quick_BOM_Compare
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error extracting assembly properties: {ex.Message}");
+                    LogMessage($"Error extracting assembly properties: {ex.Message}");
                     return new Dictionary<string, double>();
                 }
             }
 
             // Return an empty dictionary if maximum retries are reached
-            Console.WriteLine("Failed to extract properties after multiple retries.");
+            LogMessage("Failed to extract properties after multiple retries.");
             return new Dictionary<string, double>();
         }
 
-        static Dictionary<string, double> ExtractDraftProperties(SolidEdgeFramework.SolidEdgeDocument document)
+        Dictionary<string, double> ExtractDraftProperties(SolidEdgeFramework.SolidEdgeDocument document)
         {
             int retryCount = 0;
             const int maxRetries = 5;
@@ -195,8 +206,8 @@ namespace Quick_BOM_Compare
                         if (modelLink != null)
                         {
                             string modelFileName = modelLink.FileName;
-                            Console.WriteLine($"Processing referenced model file: {modelFileName}");
-                            Console.WriteLine();
+                            LogMessage($"Processing referenced model file: {modelFileName}");
+                            
 
                             // Open the referenced model document
                             SolidEdgeFramework.SolidEdgeDocument referencedDoc = TryOpenDocument(modelLink.Application, modelFileName);
@@ -215,7 +226,7 @@ namespace Quick_BOM_Compare
                 catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.ErrorCode == 0x8001010A)
                 {
                     // Error: RPC_E_SERVERCALL_RETRYLATER - Application is busy, retry after a delay
-                    Console.WriteLine($"Solid Edge is busy, retrying... ({retryCount + 1}/{maxRetries})");
+                    LogMessage($"Solid Edge is busy, retrying... ({retryCount + 1}/{maxRetries})");
 
                     // Wait for a while before retrying
                     System.Threading.Thread.Sleep(retryDelay);
@@ -223,14 +234,14 @@ namespace Quick_BOM_Compare
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error extracting draft properties: {ex.Message}");
+                    LogMessage($"Error extracting draft properties: {ex.Message}");
                     break; // Break out of the loop if there's a different error
                 }
             }
 
             if (retryCount == maxRetries)
             {
-                Console.WriteLine("Failed to extract properties after multiple retries.");
+                LogMessage("Failed to extract properties after multiple retries.");
             }
 
             // Ensure that we return the dictionary, even if it's empty
@@ -415,7 +426,7 @@ namespace Quick_BOM_Compare
                     Extracted_3D_List = ExtractAssemblyProperties(document);
 
                     //            SingleBOM_documentlevel = ExtractAssemblyProperties(DFT_NAME, document);
-                    //            Console.WriteLine();
+                    //            LogMessage();
                 }
             }
             catch (Exception ex)
@@ -433,7 +444,7 @@ namespace Quick_BOM_Compare
             Label3dstatus.Text = $"Succesfully fetched 3D Partlist";
             return;
             }
-        static Dictionary<string, double> GetSAP_BOM()
+        Dictionary<string, double> GetSAP_BOM()
         {
             Dictionary<string, double> Dict_SAP_BOM = new Dictionary<string, double>(); // Dict of part name and quantity
 
@@ -442,6 +453,13 @@ namespace Quick_BOM_Compare
             try
             {
                 string[] lines = File.ReadAllLines(SAP_BOM_path); // Read the file line by line
+
+                // Determine the selected quantity filter from radio buttons
+                string selectedQuantity = string.Empty;
+                if (radioButton1000.Checked)        {   selectedQuantity = "1000";  }
+                else if (radioButton2000.Checked)   {   selectedQuantity = "2000";  }
+                else if (radioButton8000.Checked)   {   selectedQuantity = "8000";  }
+
 
                 foreach (string line in lines)
                 {
@@ -460,7 +478,7 @@ namespace Quick_BOM_Compare
                             if (columns[2].Equals("T", StringComparison.OrdinalIgnoreCase))
                             {
                                 // Skip the line if the third column contains 'T'
-                                Console.WriteLine($"Info: Ignoring line with 'T' in the third column: {line}");
+                                LogMessage($"Info: Ignoring line with 'T' in the third column: {line}");
                                 continue;
                             }
 
@@ -474,17 +492,19 @@ namespace Quick_BOM_Compare
                                 // Remove any potential decimal commas and trim the quantity
                                 quantity = quantity.Replace(',', '.').Trim();
                                 double quantity_d = Convert.ToDouble(quantity, System.Globalization.CultureInfo.InvariantCulture);
-                                //quantity_d = quantity_d / 100;
-                                Dict_SAP_BOM[partName] = quantity_d; // Add or update the dictionary
+                                if (line.EndsWith(selectedQuantity))
+                                {
+                                    Dict_SAP_BOM[partName] = quantity_d; // Add or update the dictionary
+                                }
                             }
                             else
                             {
-                                Console.WriteLine($"Warning: Missing part name or quantity for line: {line}");
+                                LogMessage($"Warning: Missing part name or quantity for line: {line}");
                             }
                         }
                         else
                         {
-                            Console.WriteLine($"Warning: Skipped line with insufficient columns: {line}");
+                            LogMessage($"Warning: Skipped line with insufficient columns: {line}");
                         }
                     }
                 }
