@@ -104,15 +104,15 @@ namespace Quick_BOM_Compare
                     {
                         
                         string originalName = occurrence.Name; // Extract occurrence name (with suffix)
-                        //string baseName = originalName.Split('.')[0]; // remove extnsion by removing everything after the dot
+                        string baseName = originalName.Split(':')[0]; // remove index by removing everything after the :
                         
-                        if (basePartCounts.ContainsKey(originalName)) //if the base part name is already in the dictionary
+                        if (basePartCounts.ContainsKey(baseName)) //if the base part name is already in the dictionary
                         {
-                            basePartCounts[originalName]++; // If yes, increase the count and skip
+                            basePartCounts[baseName]++; // If yes, increase the count and skip
                         }
                         else
                         {
-                            basePartCounts[originalName] = 1; // If no, add the base name to the dictionary with a count of 1
+                            basePartCounts[baseName] = 1; // If no, add the base name to the dictionary with a count of 1
                         }
                     }
                     return basePartCounts;
@@ -361,14 +361,21 @@ namespace Quick_BOM_Compare
             label4.Text = ZeichnungVerknupfungResult; // Update label4 with the result from Excel search
             
             Linked_DFT_Path = $"Z:\\Zeichnungen\\DFT\\{Linked_DFT}.dft";
-            if (!System.IO.File.Exists(Linked_DFT_Path))
+            if (System.IO.File.Exists(Linked_DFT_Path))
+            {
+                label4.Text += System.Environment.NewLine + "Draft found in DFT :)";
+            }
+            else
             {
                 Linked_DFT_Path = $"Z:\\Zeichnungen\\alte DFT\\{Linked_DFT}.dft";
             }
-            if (!System.IO.File.Exists(Linked_DFT_Path))
+            if (System.IO.File.Exists(Linked_DFT_Path))
+            {
+                label4.Text += System.Environment.NewLine + "Draft found in alte DFT :)";
+            }
+            else
             {
                 label4.Text += System.Environment.NewLine + "Cannot find DFT file";
-
             }
 
         }
@@ -500,43 +507,36 @@ namespace Quick_BOM_Compare
                 // Loop through each entry in Extracted_3D_List
                 foreach (var entry in Extracted_3D_List)
                 {
-                    string searchString = entry.Key;  // The string to search in column B
-                    double originalValue = entry.Value;  // The double value to keep
+                    string partName = entry.Key; // The key from the extracted list
+                    double quantity = entry.Value; // The associated quantity
 
-                    // Initialize a variable to track if the string was found
-                    bool found = false;
+                    // Initialize a variable to track if a match was found
+                    bool foundMatch = false;
 
-                    // Search for the string in column B
-                    for (int row = 1; row <= rowCount; row++)
+                    // Loop through the rows in column B of the worksheet to find a match
+                    for (int row = 1; row <= worksheet.Dimension.End.Row; row++)
                     {
-                        string columnBValue = worksheet.Cells[row, 2].Text.Trim(); // Column B (2nd column)
+                        // Get the value in column B for the current row
+                        string cellValue = worksheet.Cells[row, 2].Text; // Column B
 
-                        if (columnBValue.Equals(searchString, StringComparison.OrdinalIgnoreCase))
+                        // Check if it matches the part name
+                        if (cellValue.Equals(partName, StringComparison.OrdinalIgnoreCase))
                         {
-                            // If found, get the corresponding value from column C (3rd column)
-                            string columnCValue = worksheet.Cells[row, 3].Text; // Column C
-                            double translatedValue;
+                            // If a match is found, get the value from column C
+                            string newKey = worksheet.Cells[row, 3].Text; // Column C
 
-                            // Try to parse the value from column C to double
-                            if (double.TryParse(columnCValue, out translatedValue))
-                            {
-                                Translated_3D_List[searchString] = translatedValue; // Add to Translated_3D_List
-                            }
-                            else
-                            {
-                                // If parsing fails, keep the original value
-                                Translated_3D_List[searchString] = originalValue;
-                            }
+                            // Add to Translated_3D_List with newKey and quantity
+                            Translated_3D_List[newKey] = quantity; // Quantity remains the same
 
-                            found = true;
-                            break; // Exit the loop since we've found the string
+                            foundMatch = true; // Mark as found
+                            break; // Exit the loop as we found a match
                         }
                     }
 
                     // If not found, add the original string and value to Translated_3D_List
-                    if (!found)
+                    if (!foundMatch)
                     {
-                        Translated_3D_List[searchString] = originalValue; // Keep the original value
+                        Translated_3D_List[partName] = quantity; // Keep the original value
                     }
                 }
             }
