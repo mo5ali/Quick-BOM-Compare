@@ -15,6 +15,7 @@ using SolidEdgeAssembly;   // Ensure SolidEdgeAssembly is included
 using SolidEdgeDraft;      // Ensure SolidEdgeDraft is included
 using SolidEdgePart;       // Ensure SolidEdgePart is included
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 
 namespace Quick_BOM_Compare
 {
@@ -24,6 +25,9 @@ namespace Quick_BOM_Compare
         {
             InitializeComponent();
         }
+        private SolidEdgeFramework.SolidEdgeDocument document = null;
+        private SolidEdgeFramework.Application application = null;
+
         bool IsThereALinkedDFT = false;
         public static bool Extracted_From_SAP = false;
         string Linked_DFT = string.Empty;
@@ -53,11 +57,23 @@ namespace Quick_BOM_Compare
 
             try
             {
-                // Attempt to start Solid Edge application (Solid Edge must be installed)
-                application = (SolidEdgeFramework.Application)Activator.CreateInstance(Type.GetTypeFromProgID("SolidEdge.Application"));
+                try
+                {
+                    // Try to get an existing Solid Edge instance
+                    application = (SolidEdgeFramework.Application)Marshal.GetActiveObject("SolidEdge.Application");
 
-                // Set to false to hide the Solid Edge window
-                application.Visible = false;
+                    // If found, set visibility to false if it's not already
+                    if (application != null && application.Visible)
+                    {
+                        application.Visible = false;
+                    }
+                }
+                catch (COMException)
+                {
+                    // If no instance is running, start a new one
+                    application = (SolidEdgeFramework.Application)Activator.CreateInstance(Type.GetTypeFromProgID("SolidEdge.Application"));
+                    application.Visible = false; // Make sure it's invisible
+                }
             }
             catch (Exception ex)
             {
@@ -609,7 +625,10 @@ namespace Quick_BOM_Compare
             singleBOM = Create_Single_BOM(Translated_3D_List, Extracted_SAP_List);
             DisplaySingleBOM(singleBOM);
             dataGridView1.CellFormatting += DataGridView1_CellFormatting;
-
+            if (document != null)
+            {
+                document.Close(false); // Close without saving changes
+            }
         }
         private Dictionary<string, (double, double, string)> Create_Single_BOM(Dictionary<string, double> basePartCounts, Dictionary<string, double> DictSAPBOM)
         {
