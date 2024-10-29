@@ -34,6 +34,7 @@ namespace Quick_BOM_Compare
         public static Dictionary<string, double> Translated_3D_List = new Dictionary<string, double>();
         public static Dictionary<string, double> Extracted_SAP_List = new Dictionary<string, double>();
         public static string InputAsmName = string.Empty;
+        public List<string> disregardList = new List<string> { "DB-ERP", "ESMP", "ESDT", "ECLIPS", "OIL IN", "OIL OUT", };
 
         private void LogMessage(string message)
         {
@@ -94,7 +95,6 @@ namespace Quick_BOM_Compare
 
             return document; // Returns null if it failed to open after retries
         }
-
         Dictionary<string, double> ExtractAssemblyProperties(SolidEdgeFramework.SolidEdgeDocument document)
         {
             int retryCount = 0;
@@ -148,7 +148,6 @@ namespace Quick_BOM_Compare
             LogMessage("Failed to extract properties after multiple retries.");
             return new Dictionary<string, double>();
         }
-
         Dictionary<string, double> ExtractDraftProperties(SolidEdgeFramework.SolidEdgeDocument document)
         {
             int retryCount = 0;
@@ -274,7 +273,6 @@ namespace Quick_BOM_Compare
                 return false;
             }
         }
-
         private string searchZeichnungVerknupfung(string asmName)
         {
             string ZeichnungVerknupfungPath = @"Z:\Allgemein\Hilfsmittel\ExcelMakros_NM\ZeichnungenZuKuehler_000.2.xlsm";
@@ -395,7 +393,6 @@ namespace Quick_BOM_Compare
             }
 
         }
-
         private void button2_Click(object sender, EventArgs e)
         {
             Extracted_SAP_List = GetSAP_BOM();
@@ -521,7 +518,6 @@ namespace Quick_BOM_Compare
             Extracted_From_SAP = true;
             return Dict_SAP_BOM;
         }
-
         public void Translate3DList( Dictionary<string, double> Extracted_3D_List, out Dictionary<string, double> Translated_3D_List)
         {
             Translated_3D_List = new Dictionary<string, double>();
@@ -615,7 +611,7 @@ namespace Quick_BOM_Compare
             dataGridView1.CellFormatting += DataGridView1_CellFormatting;
 
         }
-        static Dictionary<string, (double, double, string)> Create_Single_BOM(Dictionary<string, double> basePartCounts, Dictionary<string, double> DictSAPBOM)
+        private Dictionary<string, (double, double, string)> Create_Single_BOM(Dictionary<string, double> basePartCounts, Dictionary<string, double> DictSAPBOM)
         {
             // This will hold the final results
             var singleBOM = new Dictionary<string, (double base3DQuantity, double sapQuantity, string someString)>();
@@ -659,9 +655,11 @@ namespace Quick_BOM_Compare
             // Third loop: Add indicators to the singleBOM if the indicator is empty
             foreach (var bomEntry in singleBOM.ToList())
             {
-                if (bomEntry.Key == "Assembly" || bomEntry.Key == "Part Name")
-                    continue; // Skip the headers while adding indicators
-
+                if (disregardList.Contains(bomEntry.Key) || bomEntry.Key.StartsWith("ILLEK") || bomEntry.Key.StartsWith("VE"))
+                {
+                    singleBOM.Remove(bomEntry.Key); // Remove this entry from singleBOM
+                    continue; // Move to the next iteration without further processing this entry
+                }
                 double base3DQuantity = bomEntry.Value.Item1;
                 double sapQuantity = bomEntry.Value.Item2;
                 string currentIndicator = bomEntry.Value.Item3;
@@ -702,4 +700,3 @@ namespace Quick_BOM_Compare
         }
     }
 }
-
