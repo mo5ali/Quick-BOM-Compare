@@ -129,10 +129,10 @@ namespace Quick_BOM_Compare
                     // Iterate through the occurrences in the assembly
                     foreach (SolidEdgeAssembly.Occurrence occurrence in assemblyDoc.Occurrences)
                     {
-                        
+
                         string originalName = occurrence.Name; // Extract occurrence name (with suffix)
                         string baseName = originalName.Split(':')[0]; // remove index by removing everything after the :
-                        
+
                         if (basePartCounts.ContainsKey(baseName)) //if the base part name is already in the dictionary
                         {
                             basePartCounts[baseName]++; // If yes, increase the count and skip
@@ -142,6 +142,43 @@ namespace Quick_BOM_Compare
                             basePartCounts[baseName] = 1; // If no, add the base name to the dictionary with a count of 1
                         }
                     }
+                    // Load the additional part quantities from the file for entries with "BPV" in the key
+                    foreach (var entry in basePartCounts.Where(entry => entry.Key.Contains("BPV")).ToList())
+                    {
+                        string key = entry.Key;
+                        double originalCount = entry.Value;
+
+                        // Read through the file to find matching lines
+                        string[] lines = File.ReadAllLines(@"Z:\Allgemein\Temp\MA\COMPARISON\BPV_ASM_PARTS.txt");
+
+                        foreach (string line in lines)
+                        {
+                            string[] parts = line.Split('\t'); // Split the line by tabs
+                            if (parts.Length >= 3 && parts[0] == key)
+                            {
+                                string newKey = parts[1]; // New part name
+                                double quantity;
+
+                                if (double.TryParse(parts[2], out quantity))
+                                {
+                                    double totalQuantity = quantity * originalCount; // Scale by the original count
+
+                                    // If the new part is already in basePartCounts, add to its count
+                                    if (basePartCounts.ContainsKey(newKey))
+                                    {
+                                        basePartCounts[newKey] += totalQuantity;
+                                    }
+                                    else // Otherwise, add the new entry
+                                    {
+                                        basePartCounts[newKey] = totalQuantity;
+                                    }
+                                }
+                            }
+                        }
+                        // Remove the original "BPV" entry since it has been replaced by parts
+                        basePartCounts.Remove(key);
+                    }
+
                     return basePartCounts;
                 }
                 catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.ErrorCode == 0x8001010A)
